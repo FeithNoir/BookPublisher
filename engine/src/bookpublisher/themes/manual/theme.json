@@ -1,0 +1,6 @@
+{
+  "name": "Manual técnico",
+  "description": "Guías y manuales: Inter y PT Serif, capítulos numerados en página nueva, secciones 1.1, bloques de código resaltados, recuadros de nota/consejo/advertencia, tablas rayadas e índice con secciones.",
+  "defaults": {"page_size": "a4", "chapter_break": "page", "font_size": 10.5, "chapter_numbering": "arabic", "toc_depth": 2, "dropcaps": false, "paper": ""},
+  "swatch": ["#ffffff", "#111827", "#4f46e5"]
+}

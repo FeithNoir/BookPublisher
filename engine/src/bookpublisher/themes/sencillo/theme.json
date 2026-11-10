@@ -1,0 +1,6 @@
+{
+  "name": "Sencillo",
+  "description": "Limpio y legible: Charis SIL en 6×9 pulgadas, títulos en Inter, sin adornos. Sirve para cualquier texto cuando lo que importa es leer.",
+  "defaults": {"page_size": "6x9", "chapter_break": "page", "font_size": 11, "chapter_numbering": "arabic", "toc_depth": 1, "dropcaps": false, "paper": ""},
+  "swatch": ["#ffffff", "#1f2937", "#6b7280"]
+}

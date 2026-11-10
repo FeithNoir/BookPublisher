@@ -1,0 +1,18 @@
+{
+  "name": "Novela clásica",
+  "description": "Libro de bolsillo A5: Libertinus Serif justificado con partición silábica, sangrías sin espacio entre párrafos, capitulares, capítulos que abren en página impar, cabeceras en versalitas y control de viudas y huérfanas. Pensado para novelas largas.",
+  "defaults": {
+    "page_size": "a5",
+    "chapter_break": "recto",
+    "font_size": 10.5,
+    "chapter_numbering": "arabic",
+    "toc_depth": 1,
+    "dropcaps": true,
+    "paper": ""
+  },
+  "swatch": [
+    "#fbf8f1",
+    "#1d1a16",
+    "#7a2e22"
+  ]
+}

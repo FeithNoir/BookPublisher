@@ -1,0 +1,19 @@
+{
+  "name": "Códice",
+  "description": "Tratado antiguo en pergamino: EB Garamond e IM Fell English, versalitas espaciadas, filetes con rombo, capítulos en romanos, índice con puntos guía y marcas rojas († y «Pendiente de consultar»). Es el estilo del Manual de Arbitraje y del Libro del Grupo Armagedón.",
+  "defaults": {
+    "page_size": "a4",
+    "chapter_break": "flow",
+    "font_size": 12.4,
+    "chapter_numbering": "roman",
+    "toc_depth": 1,
+    "dropcaps": true,
+    "paper": "#f1e7d0",
+    "toc_kicker_format": "{kicker}, o {title_lc}"
+  },
+  "swatch": [
+    "#f1e7d0",
+    "#2e2418",
+    "#8c2f1b"
+  ]
+}
