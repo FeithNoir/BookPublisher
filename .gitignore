@@ -1,0 +1,31 @@
+# Dependencias y compilados
+node_modules/
+web/dist/
+web/.angular/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+build/
+dist/
+
+# Referencias privadas (PDF originales, manuscritos): nunca al repositorio
+docs/refs/
+manuscritos/
+privado/
+*.private.md
+
+# Salidas generadas
+*.pdf
+*.docx
+!samples/**/*.pdf
+salidas/
+*-imagenes/
+
+# Editor / sistema
+.DS_Store
+.idea/
+.vscode/
+*.log
