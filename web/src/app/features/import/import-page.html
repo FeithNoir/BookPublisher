@@ -1,0 +1,70 @@
+<div class="wrap">
+  <section class="card">
+    <h2>Importar un PDF</h2>
+    <p class="lead">Convierte un PDF con texto a <strong>Markdown</strong> y <strong>Word</strong> conservando títulos, párrafos, cursivas y negritas, listas, tablas, notas e imágenes. Quita cabeceras, pies y números de página, y une las palabras partidas a final de línea.</p>
+    <label
+      class="drop"
+      [class.over]="dragging()"
+      [class.disabled]="state()?.status === 'running'"
+      (dragover)="$event.preventDefault(); dragging.set(true)"
+      (dragleave)="dragging.set(false)"
+      (drop)="onDrop($event)"
+    >
+      <input type="file" accept="application/pdf,.pdf" (change)="onFile($event)" hidden [disabled]="state()?.status === 'running'" />
+      <strong>Elige o arrastra un PDF</strong>
+      <span>Se procesa en esta máquina; nada sale de ella.</span>
+    </label>
+    <div class="opts">
+      <label><input type="checkbox" [checked]="images()" (change)="images.set($any($event.target).checked)" /> Extraer imágenes</label>
+      <label><input type="checkbox" [checked]="tables()" (change)="tables.set($any($event.target).checked)" /> Detectar tablas</label>
+    </div>
+  </section>
+
+  @if (state(); as s) {
+    <section class="card progress" [attr.data-status]="s.status">
+      <div class="head">
+        <strong>{{ s.file }}</strong>
+        @if (s.status === 'running') {
+          <button class="btn danger" type="button" (click)="cancel()">Cancelar</button>
+        }
+      </div>
+      @if (s.status === 'running') {
+        <div class="bar"><i [style.width.%]="percent(s)"></i></div>
+        <div class="meta">
+          <span>{{ s.message }}</span>
+          @if (s.pages) {
+            <span>página {{ s.page }} de {{ s.pages }}</span>
+          }
+          <span>{{ s.elapsed.toFixed(1) }} s</span>
+        </div>
+      }
+      @if (s.status === 'error') {
+        <p class="error" role="alert">{{ s.error }}</p>
+      }
+      @if (s.status === 'cancelled') {
+        <p class="muted">Importación cancelada.</p>
+      }
+      @if (s.status === 'done' && s.result; as r) {
+        <div class="stats">
+          <div><b>{{ r['report']['pages'] }}</b><span>páginas</span></div>
+          <div><b>{{ r['chapters'] }}</b><span>capítulos</span></div>
+          <div><b>{{ r['words'] }}</b><span>palabras</span></div>
+          <div><b>{{ r['report']['tables'] }}</b><span>tablas</span></div>
+          <div><b>{{ r['report']['images'] }}</b><span>imágenes</span></div>
+          <div><b>{{ r['report']['joined_hyphens'] }}</b><span>guiones unidos</span></div>
+          <div><b>{{ r['seconds'] }} s</b><span>tiempo</span></div>
+        </div>
+        @if (r['report']['removed_headers']?.length) {
+          <p class="muted">Cabeceras y pies quitados: {{ r['report']['removed_headers'].slice(0, 4).join(' · ') }}</p>
+        }
+        <div class="actions">
+          <a class="btn green" [href]="url('md')" download>Descargar Markdown</a>
+          <a class="btn blue" [href]="url('docx')" download>Descargar Word</a>
+          <button class="btn primary" type="button" (click)="openInStudio()">Abrir en el estudio</button>
+        </div>
+        <h3>Vista del Markdown</h3>
+        <pre class="md">{{ r['markdown_preview'] }}</pre>
+      }
+    </section>
+  }
+</div>

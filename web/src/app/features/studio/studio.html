@@ -1,0 +1,289 @@
+<div class="studio">
+  <aside class="rail" aria-label="Panel del libro">
+    <section>
+      <h2>Documento</h2>
+      @if (store.doc(); as d) {
+        <div class="doc-card">
+          <strong class="doc-title" [title]="d.title">{{ d.title || d.name }}</strong>
+          <span class="muted">{{ d.name }}</span>
+          <span class="stats">{{ d.words | number: '1.0-0' : 'es' }} palabras · {{ d.chapters.length }} capítulos</span>
+        </div>
+        <label class="btn ghost">
+          Abrir otro…
+          <input type="file" accept=".md,.markdown,.txt,.docx" (change)="onFile($event)" hidden />
+        </label>
+      } @else {
+        <label
+          class="drop"
+          [class.over]="dragging()"
+          (dragover)="$event.preventDefault(); dragging.set(true)"
+          (dragleave)="dragging.set(false)"
+          (drop)="onDrop($event)"
+        >
+          <input type="file" accept=".md,.markdown,.txt,.docx" (change)="onFile($event)" hidden />
+          <strong>Abre un texto</strong>
+          <span>.md, .txt o .docx — arrástralo aquí o haz clic</span>
+        </label>
+        <button class="btn ghost" type="button" (click)="pasteOpen.set(!pasteOpen())">Pegar texto</button>
+        @if (pasteOpen()) {
+          <textarea
+            rows="7"
+            placeholder="# Capítulo 1&#10;&#10;Era una noche…"
+            [value]="pasteText()"
+            (input)="pasteText.set($any($event.target).value)"
+          ></textarea>
+          <button class="btn primary" type="button" (click)="openPasted()" [disabled]="!pasteText().trim()">Abrir</button>
+        }
+      }
+      @if (store.opening()) {
+        <p class="note">Leyendo el documento…</p>
+      }
+      @if (store.openError(); as e) {
+        <p class="error" role="alert">{{ e }}</p>
+      }
+    </section>
+
+    <section>
+      <h2>Tema</h2>
+      <div class="themes">
+        @for (t of store.themes(); track t.id) {
+          <button
+            type="button"
+            class="theme"
+            [class.selected]="t.id === store.options().theme"
+            (click)="store.setTheme(t.id)"
+            [title]="t.description"
+          >
+            <span class="swatch">
+              @for (c of t.swatch; track $index) {
+                <i [style.background]="c"></i>
+              }
+            </span>
+            <span class="theme-name">{{ t.name }}</span>
+          </button>
+        }
+      </div>
+      @if (store.theme(); as t) {
+        <p class="note">{{ t.description }}</p>
+      }
+    </section>
+
+    <section>
+      <h2>Opciones</h2>
+      <label class="field">
+        <span>Tamaño de página</span>
+        <select [value]="store.effective().page_size" (change)="store.patch({ page_size: $any($event.target).value })">
+          @for (p of pageSizes; track p[0]) {
+            <option [value]="p[0]" [selected]="p[0] === store.effective().page_size">{{ p[1] }}</option>
+          }
+        </select>
+      </label>
+      <div class="row">
+        <label class="field">
+          <span>Cuerpo (pt)</span>
+          <input
+            type="number"
+            min="7"
+            max="16"
+            step="0.5"
+            [value]="store.effective().font_size"
+            (change)="store.patch({ font_size: num($any($event.target).value) })"
+          />
+        </label>
+        <label class="field">
+          <span>Capítulos</span>
+          <select (change)="store.patch({ chapter_break: $any($event.target).value })">
+            <option value="flow" [selected]="store.effective().chapter_break === 'flow'">Seguidos</option>
+            <option value="page" [selected]="store.effective().chapter_break === 'page'">Página nueva</option>
+            <option value="recto" [selected]="store.effective().chapter_break === 'recto'">Página impar</option>
+          </select>
+        </label>
+      </div>
+      <div class="checks">
+        <label><input type="checkbox" [checked]="store.effective().dropcaps" (change)="store.patch({ dropcaps: $any($event.target).checked })" /> Capitulares</label>
+        <label><input type="checkbox" [checked]="store.options().hyphenate" (change)="store.patch({ hyphenate: $any($event.target).checked })" /> Partir palabras</label>
+        <label><input type="checkbox" [checked]="store.options().cover" (change)="store.patch({ cover: $any($event.target).checked })" /> Portada</label>
+        <label><input type="checkbox" [checked]="store.options().toc" (change)="store.patch({ toc: $any($event.target).checked })" /> Índice</label>
+      </div>
+      @if (store.doc()) {
+        <label class="field">
+          <span>Título</span>
+          <input type="text" [placeholder]="store.doc()?.title ?? ''" [value]="store.options().title ?? ''" (change)="store.patch({ title: $any($event.target).value || null })" />
+        </label>
+        <label class="field">
+          <span>Autor</span>
+          <input type="text" [placeholder]="store.doc()?.meta?.['author'] ?? 'Sin autor'" [value]="store.options().author ?? ''" (change)="store.patch({ author: $any($event.target).value || null })" />
+        </label>
+      }
+    </section>
+
+    @if (store.doc(); as d) {
+      <section class="chapters-section">
+        <h2>Capítulos</h2>
+        <ol class="chapters">
+          <li>
+            <button type="button" [class.active]="store.target() === 'cover'" (click)="store.selectChapter('cover')">
+              <span class="dot front"></span>
+              <span class="ch-text">Portada e índice</span>
+            </button>
+          </li>
+          @for (c of d.chapters; track c.index) {
+            <li>
+              <button type="button" [class.active]="selectedIndex() === c.index" (click)="store.selectChapter('' + c.index)">
+                <span class="dot" [attr.data-state]="store.chapterStates()[c.index] ?? 'none'" [title]="store.chapterStates()[c.index] ?? ''"></span>
+                <span class="ch-text">
+                  @if (c.label) {
+                    <small>{{ c.label }}</small>
+                  }
+                  {{ c.title || c.label || 'Sin título' }}
+                </span>
+                <span class="words">{{ c.words | number: '1.0-0' : 'es' }}</span>
+              </button>
+            </li>
+          }
+        </ol>
+      </section>
+    }
+
+    <section>
+      <h2>Acciones</h2>
+      <button class="btn green" type="button" (click)="store.export('pdf')" [disabled]="!store.doc() || store.busy()">
+        Exportar PDF
+        @if (store.estimate(); as est) {
+          <small>≈ {{ fmtTime(est) }}</small>
+        }
+      </button>
+      <button class="btn gray" type="button" (click)="store.export('docx')" [disabled]="!store.doc() || store.busy()">Exportar Word (.docx)</button>
+      <button class="btn blue" type="button" (click)="store.export('md')" [disabled]="!store.doc() || store.busy()">Exportar Markdown</button>
+    </section>
+  </aside>
+
+  <section class="canvas" aria-label="Vista previa">
+    @if (store.doc(); as d) {
+      <div class="toolbar">
+        <button type="button" class="nav" (click)="store.step(-1)" [disabled]="store.target() === 'cover'" aria-label="Anterior">‹</button>
+        <div class="where">
+          <strong>{{ currentLabel() }}</strong>
+          <span class="muted">
+            @if (store.previewLoading()) {
+              Componiendo vista previa…
+            } @else if (store.preview(); as p) {
+              {{ p.chunk_pages }} páginas en este bloque · vista previa en {{ fmtTime(p.seconds) }}
+            }
+          </span>
+        </div>
+        <button type="button" class="nav" (click)="store.step(1)" [disabled]="selectedIndex() >= d.chapters.length - 1" aria-label="Siguiente">›</button>
+      </div>
+
+      @if (store.previewError(); as e) {
+        <div class="alert" role="alert">
+          <strong>No se pudo componer la vista previa.</strong>
+          <p>{{ e.message }}</p>
+          @if (e.detail) {
+            <pre>{{ e.detail }}</pre>
+          }
+        </div>
+      }
+
+      <div class="pages" [class.loading]="store.previewLoading()">
+        @if (store.preview(); as p) {
+          @for (pg of p.pages; track pg.key) {
+            <figure class="page">
+              <img [src]="pg.url" [alt]="'Página ' + pg.page" loading="lazy" />
+              <figcaption>{{ pg.page }}</figcaption>
+            </figure>
+          }
+        } @else {
+          @for (i of [1, 2]; track i) {
+            <div class="page skeleton"></div>
+          }
+        }
+      </div>
+    } @else {
+      <div class="welcome">
+        <h2>Maqueta tu libro</h2>
+        <p>Abre un Markdown, un texto plano o un Word a la izquierda, elige un tema y mira cada capítulo al instante. La exportación trabaja por capítulos en paralelo: una novela de 800 páginas tarda segundos, puedes cancelarla en cualquier momento y, si solo cambias un capítulo, solo se vuelve a componer ese.</p>
+        <p>¿Tienes un PDF? Pásalo a Markdown o Word en <a href="/importar">Importar PDF</a>.</p>
+        <ol>
+          <li><strong>Abre</strong> el texto</li>
+          <li><strong>Elige</strong> tema y opciones</li>
+          <li><strong>Revisa</strong> capítulo a capítulo (← →)</li>
+          <li><strong>Exporta</strong> a PDF, Word o Markdown</li>
+        </ol>
+      </div>
+    }
+
+    @if (store.exportState(); as s) {
+      <div class="export" [attr.data-status]="s.status" role="status" aria-live="polite">
+        <div class="export-head">
+          <strong>
+            @switch (s.status) {
+              @case ('running') { Exportando {{ s.format.toUpperCase() }} · {{ phaseLabel(s.phase) }} }
+              @case ('done') { {{ s.format.toUpperCase() }} listo }
+              @case ('cancelled') { Exportación cancelada }
+              @case ('error') { No se pudo exportar }
+            }
+          </strong>
+          @if (s.status === 'running') {
+            <button type="button" class="btn small danger" (click)="store.cancelExport()">Cancelar (Esc)</button>
+          } @else {
+            <button type="button" class="close" (click)="store.dismissExport()" aria-label="Cerrar">×</button>
+          }
+        </div>
+        @if (s.status === 'running') {
+          <div class="bar" role="progressbar" [attr.aria-valuenow]="(s.percent * 100).toFixed(0)" aria-valuemin="0" aria-valuemax="100">
+            <i [style.width.%]="s.percent * 100"></i>
+          </div>
+          <div class="export-meta">
+            <span>{{ (s.percent * 100).toFixed(0) }} %</span>
+            @if (s.total && (s.phase === 'maquetar' || s.phase === 'foliar')) {
+              <span>{{ s.done }} / {{ s.total }} bloques</span>
+            }
+            <span>{{ fmtTime(s.elapsed) }} transcurridos</span>
+            <span>quedan ≈ {{ fmtTime(s.etaSeconds) }}</span>
+          </div>
+        }
+        @if (s.status === 'done' && s.result; as r) {
+          <div class="export-meta">
+            @if (r['pages']) {
+              <span>{{ r['pages'] }} páginas</span>
+            }
+            <span>{{ fmtSize(r['size_bytes']) }}</span>
+            <span>en {{ fmtTime(r['seconds'] ?? s.elapsed) }}</span>
+            @if (r['chunks']) {
+              <span>{{ r['cached_chunks'] }}/{{ r['chunks'] }} desde caché</span>
+            }
+          </div>
+          <div class="export-actions">
+            <a class="btn green small" [href]="store.fileUrl(s.format)" download>Descargar {{ r['file'] }}</a>
+            @if (s.format === 'pdf') {
+              <a class="btn gray small" [href]="store.fileUrl('pdf', true)" target="_blank" rel="noopener">Abrir en otra pestaña</a>
+            }
+          </div>
+          @if (r['warnings']?.length) {
+            <details>
+              <summary>{{ r['warnings'].length }} avisos de composición</summary>
+              <ul>
+                @for (w of r['warnings']; track $index) {
+                  <li>{{ w }}</li>
+                }
+              </ul>
+            </details>
+          }
+        }
+        @if (s.status === 'error' && s.error; as e) {
+          <p class="error">{{ e.message }}</p>
+          @if (e.chapter !== null && e.chapter !== undefined && e.chapter !== 'front') {
+            <button type="button" class="btn small gray" (click)="store.selectChapter(e.chapter)">Ver el capítulo con el problema</button>
+          }
+          @if (e.detail) {
+            <button type="button" class="link" (click)="showDetail.set(!showDetail())">{{ showDetail() ? 'Ocultar' : 'Ver' }} detalle técnico</button>
+            @if (showDetail()) {
+              <pre>{{ e.detail }}</pre>
+            }
+          }
+        }
+      </div>
+    }
+  </section>
+</div>
