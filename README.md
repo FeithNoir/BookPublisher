@@ -71,6 +71,44 @@ bookpublisher import documento.pdf --to ambos -o documento # .md (+ imágenes) y
 
 Opciones de exportación: `--page-size a4|a5|b5|carta|6x9|5.5x8.5`, `--font-size`, `--chapter-break flow|page|recto`, `--title`, `--author`, `--no-toc`, `--no-cover`, `--no-hyphenate`, `--workers`. Ctrl+C cancela.
 
+### Entrada desde OniriFix
+
+Cadena habitual: corregir el manuscrito con [OniriFix](https://github.com/FeithNoir/OniriFix) y maquetarlo aquí. OniriFix no reescribe un `.pdf` ni un `.docx` en su sitio: el texto corregido sale siempre como Markdown al lado del original.
+
+```bash
+# 1. Aplicar L1 + L2 seguras (el PDF/DOCX original no se toca).
+onirifix corregir capitulo.pdf --l2-seguras --aplicar --formato md,csv,json,diff,pdf
+
+# Quedan, entre otros:
+#   capitulo.corregido.md      ← entrada preferida para BookPublisher
+#   manuscrito-corregido.pdf   ← un capítulo por página (opcional)
+#   informe.pdf                ← auditoría editorial
+```
+
+Si el manuscrito ya es `.md` o `.txt`, OniriFix puede reescribirlo in situ con `--aplicar`; para BookPublisher basta ese mismo archivo.
+
+```bash
+# 2a. Línea de órdenes: exportar el mismo capítulo en dos temas.
+bookpublisher export capitulo.corregido.md -t novela -o capitulo-novela.pdf
+bookpublisher export capitulo.corregido.md -t sencillo -o capitulo-sencillo.pdf
+
+# 2b. Estudio: abre el .md, elige tema y exporta.
+bookpublisher serve
+```
+
+Si solo tienes el PDF corregido de OniriFix (sin el `.md`):
+
+```bash
+bookpublisher import manuscrito-corregido.pdf --to ambos -o capitulo
+bookpublisher export capitulo.md -t novela -o capitulo-novela.pdf
+```
+
+Notas:
+
+* Prefiere `*.corregido.md` sobre reimportar el PDF: evitas una pasada extra de extracción y conservas mejor la estructura.
+* El PDF de OniriFix y el de BookPublisher tienen que llevar capa de texto; un escaneo sin OCR no sirve en ninguno de los dos.
+* Ajusta `--page-size`, `--chapter-break` o el tema (`novela`, `sencillo`, `manual`, `codice`) según lo que veas al revisar el PDF.
+
 ### Desde Python
 
 ```python
